@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.vscode/
+instance
+.env
+.DS_Store
+.cursorrules
+.venv
+.gitignore

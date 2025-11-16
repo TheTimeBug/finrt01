@@ -1,0 +1,7 @@
+PS C:\xampp\htdocs\practice\2_python_Fastapi\t1> python --version
+Python 3.12.6
+PS C:\xampp\htdocs\practice\2_python_Fastapi\t1> python -m venv .venv
+PS C:\xampp\htdocs\practice\2_python_Fastapi\t1> .venv/Scripts/activate
+(.venv) PS C:\xampp\htdocs\practice\2_python_Fastapi\t1> pip install -r requirnment.txt
+(.venv) PS C:\xampp\htdocs\practice\2_python_Fastapi\t1> uvicorn main:app --reload
+
