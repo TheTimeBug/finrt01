@@ -9,7 +9,7 @@ from mkt_day_end_data import (
     post_mkt_day_end_data_to_sqlite,
 )
 from projectState import projectState_delete, projectState_init
-
+from helper import get_last_entry_from_sqlite
 app = FastAPI()
 
 
@@ -25,6 +25,11 @@ class MarketDayEndData(BaseModel):
 @app.get("/")
 def read_root():
     return {"message": "Hello World"}
+
+@app.get("/get-last-entry")
+def get_last_entry():
+    result = get_last_entry_from_sqlite()
+    return result
 
 
 @app.post("/post-mkt-day-end-data")
