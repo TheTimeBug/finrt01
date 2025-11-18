@@ -1,10 +1,22 @@
+from typing import List
+
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 # from V1.client_portfolio import client_portfolio
-from mkt_day_end_data import api_adj_data_all
-from projectState import projectState_init, projectState_delete
+from mkt_day_end_data import post_mkt_day_end_data_to_sqlite, get_mkt_day_end_data_from_sqlite
+from projectState import projectState_delete, projectState_init
 
 app = FastAPI()
+
+
+# Pydantic model for the incoming data structure
+class MarketDayEndData(BaseModel):
+    status: int
+    message: str
+    data: List[
+        dict
+    ]  # List of dictionaries, can be customized further if structure is known
 
 
 @app.get("/")
@@ -12,16 +24,42 @@ def read_root():
     return {"message": "Hello World"}
 
 
-@app.get("/api_adj_data_all")
-def api_adj_data_all_get():
-    result = api_adj_data_all()
-    return result
+@app.post("/post-mkt-day-end-data")
+def post_mkt_day_end_data(payload: MarketDayEndData):
+    try:
+        # Access the received data
+        # status = payload.status
+        # message = payload.message
+        data_records = payload.data
 
+        result = post_mkt_day_end_data_to_sqlite(data_records)
+        if result["status"] == 200:
+            return {
+                "status": 200,
+                "message": "Market day-end data stored successfully",
+                "records_count": len(data_records),
+            }
+        else:
+            return {
+                "status": 500,
+                "message": "Market day-end data stored failed",
+                "records_count": len(data_records),
+                "data": result,
+            }
+    except Exception as e:
+        return {"status": 500, "message": f"Error processing data: {str(e)}"}
 
-@app.get("/api_adj_data_new")
-def api_adj_data_new():
-    return {"message": "Hello World"}
+@app.get("/get-mkt-day-end-data")
+def get_mkt_day_end_data():
+    result = get_mkt_day_end_data_from_sqlite()
 
+    reply_data = {
+        "status": 200,
+        "message": "Market day-end data retrieved successfully",
+        "records_count": len(result),
+        "data": result,
+    }
+    return reply_data
 
 # initialize the project state
 @app.post("/project_init/{project_name}/{password}")
@@ -40,6 +78,7 @@ def project_init(project_name: str, password: str):
             }
     else:
         return {"message": "Project not found or invalid credentials"}
+
 
 # delete the project state
 @app.post("/project_delete/{project_name}/{password}")

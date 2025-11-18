@@ -1,8 +1,15 @@
-from sqliteCN import check_table_exists, create_table, delete_table, delete_database, create_database
+from sqliteCN import (
+    check_table_exists,
+    create_database,
+    create_table,
+    delete_database,
+    delete_table,
+)
 
 database_path = "finStock.db"
 mktDayEndData_table_name = "mktDayEndData"
 mktSecurityInfo_table_name = "mktSecurityInfo"
+
 
 # initialize the project state
 def projectState_init():
@@ -14,6 +21,7 @@ def projectState_init():
     else:
         return False
 
+
 # delete the project state
 def projectState_delete():
     result1 = delete_MktDayEndData_table_if_not_exists()
@@ -23,8 +31,6 @@ def projectState_delete():
         return True
     else:
         return False
-
-
 
 
 ########################## Helper Functions ##########################
@@ -45,6 +51,7 @@ def delete_MktDayEndData_table_if_not_exists():
         print("Table not found")
         return True
 
+
 # delete the mkt security info table if it exists
 def delete_MktSecurityInfo_table_if_not_exists():
     if check_table_exists(database_path, mktSecurityInfo_table_name):
@@ -59,9 +66,11 @@ def delete_MktSecurityInfo_table_if_not_exists():
         print("Table not found")
         return True
 
+
 ######################################################################
-#create functions ########################################################
+# create functions ########################################################
 ######################################################################
+
 
 # create the mkt day end data table if it doesn't exist
 def create_MktDayEndData_table_if_not_exists():
@@ -69,7 +78,7 @@ def create_MktDayEndData_table_if_not_exists():
         print("Table already exists")
         return True
     else:
-        adjTableColumn = "id INTEGER PRIMARY KEY AUTOINCREMENT, date DATE, security_code VARCHAR(32), un_open FLOAT, un_high FLOAT, un_low FLOAT, un_close FLOAT, un_volume INTEGER, ad_open FLOAT, ad_high FLOAT, ad_low FLOAT, ad_close FLOAT, ad_volume INTEGER, adst_ratio_value FLOAT, pct_change FLOAT, pct_change_with_dsex FLOAT, create_at DATETIME, update_at DATETIME"  
+        adjTableColumn = "id INTEGER PRIMARY KEY AUTOINCREMENT, date DATE NOT NULL, security_code VARCHAR(32) NOT NULL, un_open FLOAT, un_high FLOAT, un_low FLOAT, un_close FLOAT, un_volume INTEGER, ad_open FLOAT, ad_high FLOAT, ad_low FLOAT, ad_close FLOAT, ad_volume INTEGER, adst_ratio_value FLOAT, pct_change FLOAT, pct_change_with_dsex FLOAT, create_at DATETIME, update_at DATETIME, UNIQUE(date, security_code)"
         result = create_table(database_path, mktDayEndData_table_name, adjTableColumn)
         if result:
             print("Table created successfully")
@@ -77,6 +86,7 @@ def create_MktDayEndData_table_if_not_exists():
         else:
             print("Table creation failed")
             return False
+
 
 # create the mkt security info table if it doesn't exist
 def create_MktSecurityInfo_table_if_not_exists():
@@ -101,7 +111,9 @@ def create_MktSecurityInfo_table_if_not_exists():
             "create_at DATETIME NOT NULL, "
             "update_at DATETIME NOT NULL"
         )
-        result = create_table(database_path, mktSecurityInfo_table_name, mktSecurityInfoTableColumn)    
+        result = create_table(
+            database_path, mktSecurityInfo_table_name, mktSecurityInfoTableColumn
+        )
         if result:
             print("Table created successfully")
             return True
