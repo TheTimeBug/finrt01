@@ -1,2 +1,8 @@
 fastapi
 uvicorn
+requests
+pandas
+numpy
+
+# for code formatting
+ruff
