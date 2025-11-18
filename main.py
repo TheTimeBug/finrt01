@@ -4,7 +4,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 # from V1.client_portfolio import client_portfolio
-from mkt_day_end_data import post_mkt_day_end_data_to_sqlite, get_mkt_day_end_data_from_sqlite
+from mkt_day_end_data import (
+    get_mkt_day_end_data_from_sqlite,
+    post_mkt_day_end_data_to_sqlite,
+)
 from projectState import projectState_delete, projectState_init
 
 app = FastAPI()
@@ -49,9 +52,10 @@ def post_mkt_day_end_data(payload: MarketDayEndData):
     except Exception as e:
         return {"status": 500, "message": f"Error processing data: {str(e)}"}
 
-@app.get("/get-mkt-day-end-data")
-def get_mkt_day_end_data():
-    result = get_mkt_day_end_data_from_sqlite()
+
+@app.get("/get-mkt-day-end-data/filter={filter_type}/{filter_value}")
+def get_mkt_day_end_data(filter_type: str, filter_value: str):
+    result = get_mkt_day_end_data_from_sqlite(filter_type, filter_value)
 
     reply_data = {
         "status": 200,
@@ -60,6 +64,7 @@ def get_mkt_day_end_data():
         "data": result,
     }
     return reply_data
+
 
 # initialize the project state
 @app.post("/project_init/{project_name}/{password}")

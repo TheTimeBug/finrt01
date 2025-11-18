@@ -108,11 +108,29 @@ def post_mkt_day_end_data_to_sqlite(marketDayEndData: list):
         return {"status": 500, "message": f"Error processing data: {str(e)}"}
 
 
-def get_mkt_day_end_data_from_sqlite():
+def get_mkt_day_end_data_from_sqlite(filter_type: str = None, filter_value: str = None):
     conn = sqlite3.connect(database_path_adj_data)
     cursor = conn.cursor()
-    sql = "SELECT * FROM mktDayEndData ORDER BY date DESC LIMIT 300"
-    cursor.execute(sql)
+
+    if filter_type and filter_value:
+        if filter_type == "date":
+            sql = "SELECT * FROM mktDayEndData WHERE date = ? ORDER BY date DESC"
+            cursor.execute(sql, (filter_value,))
+        elif filter_type == "security_code":
+            sql = (
+                "SELECT * FROM mktDayEndData WHERE security_code = ? ORDER BY date DESC"
+            )
+            cursor.execute(sql, (filter_value,))
+        elif filter_type == "limit":
+            sql = "SELECT * FROM mktDayEndData ORDER BY date DESC LIMIT ?"
+            cursor.execute(sql, (int(filter_value),))
+        else:
+            sql = "SELECT * FROM mktDayEndData ORDER BY date DESC LIMIT 300"
+            cursor.execute(sql)
+    else:
+        sql = "SELECT * FROM mktDayEndData ORDER BY date DESC LIMIT 300"
+        cursor.execute(sql)
+
     result = cursor.fetchall()
     conn.close()
     return result
