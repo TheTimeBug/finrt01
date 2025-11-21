@@ -3,6 +3,6 @@ uvicorn
 requests
 pandas
 numpy
-
+statsmodels
 # for code formatting
 ruff

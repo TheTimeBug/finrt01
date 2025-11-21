@@ -78,7 +78,7 @@ def create_MktDayEndData_table_if_not_exists():
         print("Table already exists")
         return True
     else:
-        adjTableColumn = "id INTEGER PRIMARY KEY AUTOINCREMENT, date DATE NOT NULL, security_code VARCHAR(32) NOT NULL, un_open FLOAT, un_high FLOAT, un_low FLOAT, un_close FLOAT, un_volume INTEGER, ad_open FLOAT, ad_high FLOAT, ad_low FLOAT, ad_close FLOAT, ad_volume INTEGER, adst_ratio_value FLOAT, pct_change FLOAT, pct_change_with_dsex FLOAT, create_at DATETIME, update_at DATETIME, UNIQUE(date, security_code)"
+        adjTableColumn = "id INTEGER PRIMARY KEY AUTOINCREMENT, date DATE NOT NULL, security_code VARCHAR(32) NOT NULL, un_open FLOAT, un_high FLOAT, un_low FLOAT, un_close FLOAT, un_volume INTEGER, total_value FLOAT, ad_open FLOAT, ad_high FLOAT, ad_low FLOAT, ad_close FLOAT, ad_volume INTEGER, adst_ratio_value FLOAT, pct_change FLOAT, pct_change_with_dsex FLOAT, create_at DATETIME, update_at DATETIME, UNIQUE(date, security_code)"
         result = create_table(database_path, mktDayEndData_table_name, adjTableColumn)
         if result:
             print("Table created successfully")

@@ -1,26 +1,39 @@
 from typing import List
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-# from V1.client_portfolio import client_portfolio
-from mkt_day_end_data import (
+from mkt_day_end import (
     get_mkt_day_end_data_from_sqlite,
     post_mkt_day_end_data_to_sqlite,
 )
+from mkt_security import post_mkt_security_to_sqlite, get_mkt_security_from_sqlite
+from lvarCal import lvrCal
 from projectState import projectState_delete, projectState_init
 from helper import get_last_entry_from_sqlite
 app = FastAPI()
 
 
 # Pydantic model for the incoming data structure
-class MarketDayEndData(BaseModel):
+class projectDataInit(BaseModel):
     status: int
     message: str
     data: List[
         dict
     ]  # List of dictionaries, can be customized further if structure is known
 
+class syncData(BaseModel):
+    status: int
+    message: str
+    mde: List[
+        dict
+    ]
+    msi: List[
+        dict
+    ]
+    csh: List[
+        dict
+    ]
+    # List of dictionaries, can be customized further if structure is known
 
 @app.get("/")
 def read_root():
@@ -31,32 +44,31 @@ def get_last_entry():
     result = get_last_entry_from_sqlite()
     return result
 
+@app.post("/get-lvar-data")
+def get_lvar_data(payload: syncData):
+    result_mde = post_mkt_day_end_data_to_sqlite(payload.mde)
+    result_msi = post_mkt_security_to_sqlite(payload.msi)
 
-@app.post("/post-mkt-day-end-data")
-def post_mkt_day_end_data(payload: MarketDayEndData):
-    try:
-        # Access the received data
-        # status = payload.status
-        # message = payload.message
-        data_records = payload.data
-
-        result = post_mkt_day_end_data_to_sqlite(data_records)
-        if result["status"] == 200:
-            return {
-                "status": 200,
-                "message": "Market day-end data stored successfully",
-                "records_count": len(data_records),
-            }
-        else:
-            return {
-                "status": 500,
-                "message": "Market day-end data stored failed",
-                "records_count": len(data_records),
-                "data": result,
-            }
-    except Exception as e:
-        return {"status": 500, "message": f"Error processing data: {str(e)}"}
-
+    if result_mde["status"] == 200 and result_msi["status"] == 200:
+       result_lvrCal = lvrCal(payload.csh)
+       if result_lvrCal["status"] == 200:
+           return {
+               "status": 200,
+               "message": "Data stored and LVR calculated successfully",
+               "data": result_lvrCal,
+           }
+       else:
+           return {
+               "status": 500,
+               "message": "LVR calculation failed",
+           }
+    else:
+        return {
+            "status": 500,
+            "message": "Data stored failed",
+            "mde": result_mde,
+            "msi": result_msi,
+        }
 
 @app.get("/get-mkt-day-end-data/filter={filter_type}/{filter_value}")
 def get_mkt_day_end_data(filter_type: str, filter_value: str):
@@ -70,7 +82,22 @@ def get_mkt_day_end_data(filter_type: str, filter_value: str):
     }
     return reply_data
 
+@app.get("/get-mkt-security-data")
+def get_mkt_security_data():
+    result = get_mkt_security_from_sqlite()
+    reply_data = {
+        "status": 200,
+        "message": "Market security data retrieved successfully",
+        "records_count": len(result),
+        "data": result,
+    }
+    return reply_data
 
+
+
+
+#project state related functions
+#for initialize,delete and sync mde and msi the project state
 # initialize the project state
 @app.post("/project_init/{project_name}/{password}")
 def project_init(project_name: str, password: str):
@@ -89,7 +116,6 @@ def project_init(project_name: str, password: str):
     else:
         return {"message": "Project not found or invalid credentials"}
 
-
 # delete the project state
 @app.post("/project_delete/{project_name}/{password}")
 def project_delete(project_name: str, password: str):
@@ -107,3 +133,17 @@ def project_delete(project_name: str, password: str):
             }
     else:
         return {"message": "Project not found or invalid credentials"}
+
+@app.post("/project_data_init_mde")
+def project_data_init(payload: projectDataInit):
+    result = post_mkt_day_end_data_to_sqlite(payload.data)
+    if result["status"] == 200:
+        return {
+            "message": "Project data initialized successfully",
+            "data_count": result["data_count"],
+        }
+    else:
+        return {
+            "message": "Project data initialization failed",
+            "data_count": result,
+        }
