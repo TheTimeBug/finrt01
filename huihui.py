@@ -82,7 +82,7 @@ def hui_heubel_liquidity_ratio(ohlcv_data: pd.DataFrame, shares_outstanding: flo
     if not isinstance(ohlcv_data.index, pd.DatetimeIndex):
         try:
             ohlcv_data = ohlcv_data.copy()  # Avoid modifying the input DataFrame
-            ohlcv_data.index = pd.to_datetime(ohlcv_data.index)
+            ohlcv_data.index = pd.to_datetime(ohlcv_data.index, format='ISO8601')
         except (ValueError, TypeError) as e:
             raise ValueError("Index could not be converted to DateTime. Ensure index contains valid date-like values.") from e
     required_columns = ['Adj_Open', 'Adj_High', 'Adj_Low', 'Adj_Close', 'Adj_Volume']
