@@ -46,7 +46,7 @@ def quntileCal(csh: List[dict]):
     # Fetch historical market price data
     stock_data = get_historical_market_price(security_codes)
     stock_df = pd.DataFrame(stock_data)
-    stock_df["date"] = pd.to_datetime(stock_df["date"])
+    stock_df["date"] = pd.to_datetime(stock_df["date"], format="ISO8601")
     stock_df.set_index("date", inplace=True)
     stock_df = stock_df.reset_index()
     stock_df = stock_df.pivot(
