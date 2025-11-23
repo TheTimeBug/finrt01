@@ -145,5 +145,5 @@ def huihuiCal(client_df,stock_df):
     
     merged_df_enriched, investor_summary = compute_worst_case_edr_from_existing_LVaR(merged_df)
     investor_summary_out, merged_df_out, cat_counts = categorize_investors_by_edr(investor_summary, merged_df)
-
+    print(investor_summary_out)
     return investor_summary_out
