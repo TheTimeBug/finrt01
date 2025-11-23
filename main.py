@@ -1,15 +1,18 @@
+import json
 from typing import List
-from fastapi import FastAPI
+
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
+from helper import get_last_entry_from_sqlite
+from lvarCal import lvrCal
 from mkt_day_end import (
     get_mkt_day_end_data_from_sqlite,
     post_mkt_day_end_data_to_sqlite,
 )
-from mkt_security import post_mkt_security_to_sqlite, get_mkt_security_from_sqlite
-from lvarCal import lvrCal
+from mkt_security import get_mkt_security_from_sqlite, post_mkt_security_to_sqlite
 from projectState import projectState_delete, projectState_init
-from helper import get_last_entry_from_sqlite
+
 app = FastAPI()
 
 
@@ -21,47 +24,70 @@ class projectDataInit(BaseModel):
         dict
     ]  # List of dictionaries, can be customized further if structure is known
 
+
 class syncData(BaseModel):
     status: int
     message: str
-    mde: List[
-        dict
-    ]
-    msi: List[
-        dict
-    ]
-    csh: List[
-        dict
-    ]
+    mde: List[dict]
+    msi: List[dict]
+    csh: List[dict]
     # List of dictionaries, can be customized further if structure is known
+
 
 @app.get("/")
 def read_root():
     return {"message": "Hello World"}
+
 
 @app.get("/get-last-entry")
 def get_last_entry():
     result = get_last_entry_from_sqlite()
     return result
 
+
 @app.post("/get-lvar-data")
-def get_lvar_data(payload: syncData):
+async def get_lvar_data(request: Request):
+    # Handle both JSON object and JSON string
+    try:
+        body = await request.body()
+        body_str = body.decode("utf-8")
+
+        # Try to parse as JSON
+        try:
+            data = json.loads(body_str)
+        except json.JSONDecodeError:
+            # If it fails, it might already be a dict
+            data = body_str
+
+        # If data is still a string (double-encoded), parse again
+        if isinstance(data, str):
+            data = json.loads(data)
+
+        # Validate with Pydantic
+        payload = syncData(**data)
+
+    except Exception as e:
+        return {
+            "status": 400,
+            "message": f"Invalid request format: {str(e)}",
+        }
+
     result_mde = post_mkt_day_end_data_to_sqlite(payload.mde)
     result_msi = post_mkt_security_to_sqlite(payload.msi)
 
     if result_mde["status"] == 200 and result_msi["status"] == 200:
-       result_lvrCal = lvrCal(payload.csh)
-       if result_lvrCal["status"] == 200:
-           return {
-               "status": 200,
-               "message": "Data stored and LVR calculated successfully",
-               "data": result_lvrCal,
-           }
-       else:
-           return {
-               "status": 500,
-               "message": "LVR calculation failed",
-           }
+        result_lvrCal = lvrCal(payload.csh)
+        if result_lvrCal["status"] == 200:
+            return {
+                "status": 200,
+                "message": "Data stored and LVR calculated successfully",
+                "data": result_lvrCal,
+            }
+        else:
+            return {
+                "status": 500,
+                "message": "LVR calculation failed",
+            }
     else:
         return {
             "status": 500,
@@ -69,6 +95,7 @@ def get_lvar_data(payload: syncData):
             "mde": result_mde,
             "msi": result_msi,
         }
+
 
 @app.get("/get-mkt-day-end-data/filter={filter_type}/{filter_value}")
 def get_mkt_day_end_data(filter_type: str, filter_value: str):
@@ -82,6 +109,7 @@ def get_mkt_day_end_data(filter_type: str, filter_value: str):
     }
     return reply_data
 
+
 @app.get("/get-mkt-security-data")
 def get_mkt_security_data():
     result = get_mkt_security_from_sqlite()
@@ -94,10 +122,8 @@ def get_mkt_security_data():
     return reply_data
 
 
-
-
-#project state related functions
-#for initialize,delete and sync mde and msi the project state
+# project state related functions
+# for initialize,delete and sync mde and msi the project state
 # initialize the project state
 @app.post("/project_init/{project_name}/{password}")
 def project_init(project_name: str, password: str):
@@ -116,6 +142,7 @@ def project_init(project_name: str, password: str):
     else:
         return {"message": "Project not found or invalid credentials"}
 
+
 # delete the project state
 @app.post("/project_delete/{project_name}/{password}")
 def project_delete(project_name: str, password: str):
@@ -133,6 +160,7 @@ def project_delete(project_name: str, password: str):
             }
     else:
         return {"message": "Project not found or invalid credentials"}
+
 
 @app.post("/project_data_init_mde")
 def project_data_init(payload: projectDataInit):
