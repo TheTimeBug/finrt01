@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
+from typing import Dict
 from statsmodels.tsa.seasonal import seasonal_decompose
 # ================================================================
 # PARAMETERS (policy-configurable)
@@ -298,8 +299,12 @@ def analyze_seasonality(df, column='Volume_BDT'):
 
 
 
+def fix_last_nan(col):
+    if pd.isna(col.iloc[-1]):
+        col.iloc[-1] = col.ffill().iloc[-1]
+    return col
 
-def compute_all_hui_heubel(price_df: pd.DataFrame, floating_shares: dict[str, float]) -> pd.DataFrame:
+def compute_all_hui_heubel(price_df: pd.DataFrame, floating_shares: Dict[str, float]) -> pd.DataFrame:
     """
     Compute weekly Hui–Heubel Liquidity Ratio and turnover for each stock in price_df.
 
@@ -329,8 +334,10 @@ def compute_all_hui_heubel(price_df: pd.DataFrame, floating_shares: dict[str, fl
             result = hui_heubel_liquidity_ratio(stock_data, shares)
 
             # --- Remove outliers (your function) ---
-            result_clean = result.apply(lambda col: remove_outliers_iqr(col, multiplier=5))
-
+            # result_clean = result.apply(lambda col: remove_outliers_iqr(col, multiplier=6))
+            result_clean = result.apply(lambda col: remove_outliers_iqr(col, multiplier=6)).apply(fix_last_nan) #<- New Update
+            # if scrip in ['MIRAKHTER','SILCOPHL','ROBI']:
+            #     print(f"Post-cleaning Hui-huebel Ratio for {scrip}:\n{result_clean()}")
             result_clean["Scrip"] = scrip
             all_results.append(result_clean)
 

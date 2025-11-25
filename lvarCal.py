@@ -63,6 +63,7 @@ def quntileCal(csh: List[dict]):
     adtv_df["ADTV"] = adtv_df["ADTV"].astype(float)
     adtv_df["ADTV"] = adtv_df["ADTV"]*1000000
     
+    # print(adtv_df.head(15))
    
     # make todaysPrice as float
     client_df["todaysPrice"] = client_df["todaysPrice"].astype(float)
@@ -125,9 +126,10 @@ def huihuiCal(client_df,stock_df):
     print("huihuiCal test")
     client_df = client_df.rename(columns={"fintr_customer_id": "Investor Code", "full_name": "Investor_Name", "security_code": "Instrument Code", "quantity": "TotalStock",  "avgcost": "AvgCost", "todaysPrice": "Market_Price", "total_cost": "Total_Cost", "market_value": "TotalMarketValue", "liabilities": "Asset/Liabilities", "equity": "Equity", "liabalityRatio": "Equity_Debt_Ratio", "var_95": "VaR_95"})
     price_df= pd.DataFrame(stock_df)
+
     price_df = price_df.rename(columns={"security_code": "Scrip", "ad_close": "Adj_Close", "ad_open": "Adj_Open", "ad_high": "Adj_High", "ad_low": "Adj_Low", "ad_volume": "Adj_Volume"})
-    # print(client_df.head())
-    # print(price_df)
+    print("price_df")
+    print(price_df)
 
     outstanding_shares = get_outstanding_shares_security_codes()
     outstanding_shares_df = pd.DataFrame(
@@ -139,8 +141,19 @@ def huihuiCal(client_df,stock_df):
     hui_huebel_df = compute_all_hui_heubel(price_df, floating_shares)
     fitted_hh_df = fit_quadratic_hh_zero_insignificant(hui_huebel_df)
     # Attach structural liquidity term (Taylor-based)
+
+    print("hui_huebel_df")
+    print(hui_huebel_df.head(15))
+
+    print("fitted_hh_df")
+    print(fitted_hh_df.head(15))
     merged_df = attach_cHH_taylor(client_df, fitted_hh_df, hui_huebel_df, floating_shares)
+
+    print(merged_df.head(15))
+
+
     merged_df, investor_LVaR = compute_LVaR_portfolio(merged_df, f)
+
 
     
     merged_df_enriched, investor_summary = compute_worst_case_edr_from_existing_LVaR(merged_df)
