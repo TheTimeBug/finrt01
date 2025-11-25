@@ -653,21 +653,35 @@ def categorize_investors_by_edr(investor_summary: pd.DataFrame, merged_df: pd.Da
     """
     inv = investor_summary.copy()
 
-    # --- Classification function ---
     def classify_row(we, ce):
         if pd.isna(we) or pd.isna(ce):
             return "No Debt / Insufficient Data"
+
         if we < 0:
             return "Category 1: WE<0 & CE<0" if ce < 0 else "Category 2: WE<0 & CE>=0"
+
         if 0 <= we < 0.25:
-            return "Category 3: 0<=WE<0.25 & CE<0.25" if ce < 0.25 else "Category 4: 0<=WE<0.25 & CE>=0.25"
+            return "Category 3: 0<=WE<0.25 & CE<0.5" if ce < 0.5 else "category 3b: 0<=WE<0.25 & CE>=0.5"
+
         if 0.25 <= we < 0.5:
-            return "Category 5: 0.25<=WE<0.5 & CE<0.5" if ce < 0.5 else "Category 6: 0.25<=WE<0.5 & CE>=0.5"
-        if 0.5 <= we < 1:
-            return "Category 7: 0.5<=WE<1 & CE<1" if ce < 1 else "Category 8: 0.5<=WE<1 & CE>=1"
-        if we >= 1:
-            return "Category 9: WE>=1 & CE>=1" if ce >= 1 else "Category X: WE>=1 & CE<1 (edge-case)"
+            if ce < 0.5:
+                return "Category 4: 0.25<=WE<0.5 & CE<0.5"
+            elif 0.5<=ce<0.75:
+                return "Category 5: 0.25<=WE<0.5 & 0.5<=CE<0.75"
+            else:
+                return "Category 5b: 0.25<=WE<0.5 & CE>=0.75"
+
+        if 0.5 <= we < 0.75:
+            return "Category 6: 0.5<=WE<0.75 & CE<0.75" if ce < 0.75 else "Category 7: 0.5<=WE<0.75 & CE>=0.75"
+
+        if 0.75 <= we < 1:
+            return "Category 8: 0.75<=WE<1 & 0.75<=CE < 1" if 0.75 <= ce < 1 else "Category 9: 0.75<=WE<1 & CE>=1"
+
+        if we > 1:
+            return "Category 10: WE>1 & CE>1"
+
         return "Uncategorized"
+
 
     # --- Apply classification ---
     inv["EDR_Category"] = inv.apply(lambda r: classify_row(r["WorstCase_EDR"], r["Current_EDR"]), axis=1)
@@ -686,3 +700,6 @@ def categorize_investors_by_edr(investor_summary: pd.DataFrame, merged_df: pd.Da
     return inv, merged_out, category_counts
 
 
+# Example usage:
+# investor_summary_out, merged_df_out, cat_counts = categorize_investors_by_edr(investor_summary, merged_df)
+# print(cat_counts)
