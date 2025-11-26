@@ -19,7 +19,7 @@ outstanding_shares = {'BATBC':540,'BEACONPHAR':231,'BEXIMCO':943.24,'BRACBANK':1
                       'OLYMPIC':199.94,'PADMAOIL':98.23,'POWERGRID':913.81, 'PRIMEBANK': 1132.28, 'PUBALIBANK':1156.83,'RENATA':114.70,
                       'SANDHANINS':109.70,'SOUTHEASTB':1337.40,'SQURPHARMA':886.45,'TRUSTB1MF':303.59, 'UNIQUEHRL':294.40,'WALTONHIL':302.93,
                       '1STPRIMFMF':20.00,'GP':1350.40,'ROBI':5237.93}
-def remove_outliers_iqr(series, multiplier=3):
+def remove_outliers_iqr(series, multiplier=6):
     """
     Remove outliers from a Pandas Series based on the IQR method,
     keeping original NaNs unchanged.
